@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  name        String
+  business    String
+  category    String   @default("restaurant")
+  email       String?
+  phone       String?
+  website     String?
+  address     String?
+  city        String?
+  country     String   @default("Österreich")
+  instagram   String?
+  facebook    String?
+  googleMaps  String?
+  status      String   @default("new") // new, contacted, replied, meeting, won, lost
+  source      String   @default("manual") // manual, google_places, import
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    Message[]
+  campaigns   CampaignLead[]
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String   @default("draft") // draft, active, paused, completed
+  channel     String   @default("email") // email, whatsapp, instagram, multi
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  steps       CampaignStep[]
+  leads       CampaignLead[]
+}
+
+model CampaignStep {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  order       Int
+  channel     String   // email, whatsapp, instagram
+  subject     String?
+  body        String
+  delayDays   Int      @default(0) // days to wait after previous step
+  createdAt   DateTime @default(now())
+}
+
+model CampaignLead {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  currentStep Int      @default(0)
+  status      String   @default("pending") // pending, in_progress, completed, replied, opted_out
+  nextSendAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([campaignId, leadId])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  channel     String   // email, whatsapp, instagram
+  direction   String   @default("outbound") // outbound, inbound
+  subject     String?
+  body        String
+  status      String   @default("sent") // draft, sent, delivered, opened, replied, failed
+  sentAt      DateTime @default(now())
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  channel     String   // email, whatsapp, instagram
+  subject     String?
+  body        String
+  language    String   @default("de") // de, sq, en
+  variables   String?  // JSON array of variable names like ["businessName", "city"]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
