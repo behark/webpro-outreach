@@ -1,0 +1,19 @@
+[Unit]
+Description=WebPro fast email finder (Playwright pool)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/bb/CascadeProjects/webpro-outreach
+EnvironmentFile=/home/bb/CascadeProjects/webpro-outreach/.env
+# Find emails for up to 400 prospects per nightly run, 4 parallel pages
+ExecStart=/usr/bin/env npx tsx scripts/email-finder-fast.ts --limit=400 --concurrency=4
+StandardOutput=append:/home/bb/CascadeProjects/webpro-outreach/logs/email-finder-fast.systemd.log
+StandardError=append:/home/bb/CascadeProjects/webpro-outreach/logs/email-finder-fast.systemd.log
+Nice=15
+# Up to 90 min budget per run
+TimeoutStartSec=5400
+
+[Install]
+WantedBy=default.target

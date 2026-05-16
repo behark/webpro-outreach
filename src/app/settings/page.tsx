@@ -129,7 +129,7 @@ export default function SettingsPage() {
                 <label className="block text-xs text-slate-400 mb-1.5">Your Name</label>
                 <input
                   type="text"
-                  defaultValue="Enisi Skovercani"
+                  defaultValue="Behar Kabashi"
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
                 />
               </div>

@@ -39,8 +39,22 @@ const MIN_DELAY_SEC = parseInt(process.env.MIN_DELAY_SEC || "60");
 const MAX_DELAY_SEC = parseInt(process.env.MAX_DELAY_SEC || "180");
 const BUSINESS_HOUR_START = parseInt(process.env.BUSINESS_HOUR_START || "8");
 const BUSINESS_HOUR_END = parseInt(process.env.BUSINESS_HOUR_END || "20");
+const HEADLESS = process.env.WA_HEADLESS === "true";
 const SESSION_DIR = path.resolve(__dirname, "../.whatsapp-session");
 const LOG_FILE = path.resolve(__dirname, "../logs/whatsapp-bot.log");
+
+// Map country -> default outreach language so Kosovo / Albania get Albanian by default.
+function inferLang(lead: { notes?: string | null; country?: string | null; phone?: string | null }): string {
+  const m = lead.notes?.match(/Lang:\s*(\w+)/i);
+  if (m) return m[1].toLowerCase();
+  const c = (lead.country || "").toLowerCase();
+  if (c.includes("kosov") || c.includes("albania") || c.includes("shqip")) return "sq";
+  if (c.includes("austria") || c.includes("german") || c.includes("deutsch") || c.includes("\u00d6sterreich") || c.includes("switzerland") || c.includes("schweiz")) return "de";
+  const p = lead.phone || "";
+  if (p.startsWith("+383") || p.startsWith("+355")) return "sq";
+  if (p.startsWith("+43") || p.startsWith("+49") || p.startsWith("+41")) return "de";
+  return "de";
+}
 
 // ===== DATABASE =====
 const DB_PATH = path.resolve(__dirname, "../dev.db");
@@ -109,7 +123,8 @@ async function initBrowser(): Promise<{ browser: Browser; context: BrowserContex
   }
 
   const browser = await chromium.launchPersistentContext(SESSION_DIR, {
-    headless: false, // First run needs QR scan, then can switch to headless
+    // Headless only after first QR scan — controlled by WA_HEADLESS env var
+    headless: HEADLESS,
     args: [
       "--no-sandbox",
       "--disable-blink-features=AutomationControlled",
@@ -126,162 +141,207 @@ async function initBrowser(): Promise<{ browser: Browser; context: BrowserContex
   return { browser: browser as unknown as Browser, context: browser, page };
 }
 
+// 2024+ WhatsApp Web no longer ships data-testid attrs. Detect login by
+// looking for the side panel / search box, and detect QR by the canvas tag.
+async function isLoggedIn(page: Page): Promise<boolean> {
+  return await page.evaluate(() => {
+    // The persistent left side panel only renders post-login
+    if (document.querySelector("#side")) return true;
+    if (document.querySelector('div[aria-label="Chat list"]')) return true;
+    if (document.querySelector('header[data-tab="4"]')) return true;
+    // Search box at top of chat list
+    if (document.querySelector('div[role="textbox"][data-tab="3"]')) return true;
+    return false;
+  }).catch(() => false);
+}
+
+async function isQrVisible(page: Page): Promise<boolean> {
+  return await page.evaluate(() => {
+    return !!(
+      document.querySelector('canvas[aria-label*="Scan"]') ||
+      document.querySelector('canvas[aria-label*="QR"]') ||
+      document.querySelector('div[data-ref]') // QR ref attribute on the wrapper
+    );
+  }).catch(() => false);
+}
+
 async function waitForLogin(page: Page): Promise<boolean> {
   log("🌐 Opening WhatsApp Web...");
   await page.goto("https://web.whatsapp.com", { waitUntil: "domcontentloaded" });
 
-  // Check if already logged in
-  try {
-    await page.waitForSelector('[data-testid="chat-list"]', { timeout: 15000 });
+  // First, give the SPA up to 20 s to settle on either logged-in or QR state.
+  const deadline = Date.now() + 20000;
+  while (Date.now() < deadline) {
+    if (await isLoggedIn(page)) {
+      log("✅ Already logged in!");
+      return true;
+    }
+    if (await isQrVisible(page)) break;
+    await page.waitForTimeout(500);
+  }
+
+  if (await isLoggedIn(page)) {
     log("✅ Already logged in!");
     return true;
-  } catch {
-    // Not logged in, wait for QR scan
-    log("📱 Please scan the QR code with your phone...");
-    log("   Open WhatsApp → Settings → Linked Devices → Link a Device");
-    try {
-      await page.waitForSelector('[data-testid="chat-list"]', { timeout: 120000 });
+  }
+
+  log("📱 Please scan the QR code with your phone...");
+  log("   Open WhatsApp → Settings → Linked Devices → Link a Device");
+  const loginDeadline = Date.now() + 120000;
+  while (Date.now() < loginDeadline) {
+    if (await isLoggedIn(page)) {
       log("✅ Login successful!");
+      // Give the SPA a moment to finish hydrating chats
+      await page.waitForTimeout(3000);
       return true;
-    } catch {
-      log("❌ Login timeout. Please try again.");
-      return false;
+    }
+    await page.waitForTimeout(1000);
+  }
+  log("❌ Login timeout. Please try again.");
+  return false;
+}
+
+// Looks for the message compose box. Works on the 2024+ WhatsApp Web UI which
+// dropped data-testid and now identifies it via aria-placeholder + contenteditable.
+async function findComposeBox(page: Page) {
+  const selectors = [
+    'div[contenteditable="true"][data-tab="10"]',
+    'div[role="textbox"][aria-placeholder*="essage"]', // "Type a message"/"Message"
+    'div[role="textbox"][aria-placeholder*="achricht"]', // German "Nachricht"
+    'footer div[contenteditable="true"]',
+    'div[contenteditable="true"][role="textbox"]',
+  ];
+  for (const sel of selectors) {
+    const loc = page.locator(sel).last();
+    if (await loc.isVisible().catch(() => false)) return loc;
+  }
+  return null;
+}
+
+async function findSendButton(page: Page) {
+  const selectors = [
+    'button[aria-label="Send"]',
+    'button[aria-label="Senden"]',
+    'span[data-icon="send"]',
+    'span[data-icon="wds-ic-send-filled"]',
+    'button[data-tab="11"]',
+    'div[role="button"][aria-label="Send"]',
+    'div[role="button"][aria-label="Senden"]',
+  ];
+  for (const sel of selectors) {
+    const loc = page.locator(sel).last();
+    if (await loc.isVisible().catch(() => false)) return loc;
+  }
+  return null;
+}
+
+async function isInvalidNumberPopup(page: Page): Promise<boolean> {
+  // 2024+ shows a Material dialog with an "OK" button and "Phone number shared
+  // via url is invalid" or localised equivalent.
+  return await page.evaluate(() => {
+    const text = document.body.innerText || "";
+    if (/phone number shared via url is invalid/i.test(text)) return true;
+    if (/Telefonnummer.*ung\u00fcltig/i.test(text)) return true;
+    if (/couldn'?t find/i.test(text)) return true;
+    if (/isn'?t on WhatsApp/i.test(text)) return true;
+    return false;
+  }).catch(() => false);
+}
+
+async function dismissPopup(page: Page) {
+  const okSelectors = [
+    'div[role="button"]:has-text("OK")',
+    'button:has-text("OK")',
+    'div[role="button"]:has-text("Okay")',
+  ];
+  for (const sel of okSelectors) {
+    const loc = page.locator(sel).last();
+    if (await loc.isVisible().catch(() => false)) {
+      await loc.click().catch(() => {});
+      return;
     }
   }
 }
 
 async function sendWhatsAppMessage(page: Page, phone: string, message: string): Promise<boolean> {
   try {
-    // Clean phone number — ensure it has country code with +
-    let cleanPhone = phone.replace(/[^0-9+]/g, "");
-    if (!cleanPhone.startsWith("+")) {
-      cleanPhone = "+" + cleanPhone;
+    // Clean phone number — wa.me/send requires digits only, no leading +.
+    const cleanPhone = phone.replace(/[^0-9+]/g, "").replace(/^\+/, "");
+    if (!cleanPhone || cleanPhone.length < 7) {
+      log(`   ⚠️  Invalid phone: ${phone}`);
+      return false;
     }
 
-    // Navigate to chat via wa.me URL (most reliable method)
     const encodedMsg = encodeURIComponent(message);
     await page.goto(`https://web.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`, {
       waitUntil: "load",
-      timeout: 30000,
+      timeout: 45000,
     });
 
-    // Wait for WhatsApp Web to fully initialize (splash screen takes time)
-    // Look for either a chat element, an error popup, or the side panel
-    try {
-      await page.waitForFunction(() => {
-        return (
-          document.querySelector('[data-testid="send"]') ||
-          document.querySelector('[data-testid="popup-controls-ok"]') ||
-          document.querySelector('[data-testid="conversation-compose-box-input"]') ||
-          document.querySelector('[data-testid="compose-box"]') ||
-          document.body.innerText.includes('Phone number shared via url is invalid') ||
-          document.body.innerText.includes("isn't") ||
-          document.body.innerText.includes('Try again')
-        );
-      }, { timeout: 25000 });
-    } catch {
-      log(`   ⏳ WhatsApp Web took too long to load, retrying wait...`);
-      await page.waitForTimeout(5000);
+    // Wait up to 25 s for either: compose box, invalid-number popup, or login lost.
+    const deadline = Date.now() + 25000;
+    let composeBox: Awaited<ReturnType<typeof findComposeBox>> = null;
+    while (Date.now() < deadline) {
+      if (await isInvalidNumberPopup(page)) {
+        await dismissPopup(page);
+        log(`   ⚠️  Number not on WhatsApp: +${cleanPhone}`);
+        return false;
+      }
+      composeBox = await findComposeBox(page);
+      if (composeBox) break;
+      // Detect session lost
+      if (await isQrVisible(page)) {
+        log(`   ❌ Session lost (QR shown). Aborting batch.`);
+        throw new Error("WhatsApp session lost");
+      }
+      await page.waitForTimeout(750);
     }
 
-    // Extra small wait for UI to settle
+    if (!composeBox) {
+      const ssPath = path.resolve(__dirname, `../logs/wa-fail-${Date.now()}.png`);
+      await page.screenshot({ path: ssPath, fullPage: true }).catch(() => {});
+      log(`   ⚠️  Chat didn't load for: +${cleanPhone} (screenshot: ${ssPath})`);
+      return false;
+    }
+
+    // Human-like pause before sending
+    await page.waitForTimeout(1200 + Math.random() * 1800);
+
+    const sendBtn = await findSendButton(page);
+    if (sendBtn) {
+      await sendBtn.click();
+    } else {
+      // Fallback: focus the compose box (text already pre-filled by URL) and press Enter
+      await composeBox.click().catch(() => {});
+      await page.waitForTimeout(300);
+      await page.keyboard.press("Enter");
+    }
+
+    // Confirm: wait for an outgoing message bubble ("message-out") OR a tick icon.
+    const confirmed = await page.waitForFunction(() => {
+      // Outgoing bubble class is stable ("message-out")
+      if (document.querySelector('div.message-out')) return true;
+      // Tick / pending icons
+      if (document.querySelector('span[data-icon="msg-time"]')) return true;
+      if (document.querySelector('span[data-icon="msg-check"]')) return true;
+      if (document.querySelector('span[data-icon="msg-dblcheck"]')) return true;
+      return false;
+    }, { timeout: 10000 }).then(() => true).catch(() => false);
+
+    if (!confirmed) {
+      log(`   ⚠️  No delivery confirmation for +${cleanPhone}`);
+      return false;
+    }
+
+    // Small post-send dwell so the SPA finishes flushing
     await page.waitForTimeout(1500 + Math.random() * 1500);
 
-    // Debug: always save screenshot
-    const ssPath = path.resolve(__dirname, "../logs/wa-debug.png");
-    await page.screenshot({ path: ssPath }).catch(() => {});
-
-    // Check for various error states
-    const pageContent = await page.content();
-    if (
-      pageContent.includes("Phone number shared via url is invalid") ||
-      pageContent.includes("phone number is not") ||
-      pageContent.includes("couldn't find")
-    ) {
-      // Try to close popup
-      const okBtn = page.locator('[data-testid="popup-controls-ok"]');
-      if (await okBtn.isVisible().catch(() => false)) {
-        await okBtn.click();
-      }
-      log(`   ⚠️  Number not on WhatsApp: ${cleanPhone}`);
-      return false;
-    }
-
-    // Check for "OK" button (popup indicating number isn't valid)
-    const okButton = page.locator('[data-testid="popup-controls-ok"]');
-    if (await okButton.isVisible().catch(() => false)) {
-      await okButton.click();
-      log(`   ⚠️  Number not on WhatsApp: ${cleanPhone}`);
-      return false;
-    }
-
-    // Check if chat loaded at all — look for compose area or conversation panel
-    const chatLoaded = await page.evaluate(() => {
-      return !!(
-        document.querySelector('[data-testid="conversation-compose-box-input"]') ||
-        document.querySelector('[data-testid="compose-box"]') ||
-        document.querySelector('[contenteditable="true"]') ||
-        document.querySelector('[data-testid="msg-input"]')
-      );
-    });
-
-    if (!chatLoaded) {
-      log(`   ⚠️  Chat didn't load for: ${cleanPhone}`);
-      return false;
-    }
-
-    // Small human-like pause before clicking send
-    await page.waitForTimeout(1000 + Math.random() * 2000);
-
-    // Try multiple send button selectors (WhatsApp Web updates often)
-    const sendSelectors = [
-      '[data-testid="send"]',
-      '[data-testid="compose-btn-send"]',
-      'span[data-icon="send"]',
-      'span[data-icon="compose-btn-send"]',
-      '[aria-label="Send"]',
-      'button[aria-label="Send"]',
-      // The green circular send button
-      'div[role="button"] span[data-icon]',
-    ];
-
-    let clicked = false;
-    for (const sel of sendSelectors) {
-      const btn = page.locator(sel).first();
-      if (await btn.isVisible().catch(() => false)) {
-        await btn.click();
-        clicked = true;
-        log(`   🔘 Clicked send via: ${sel}`);
-        break;
-      }
-    }
-
-    if (!clicked) {
-      // Dump all data-testid and data-icon attrs for debugging
-      const testIds = await page.evaluate(() => {
-        const els = document.querySelectorAll("[data-testid], [data-icon]");
-        return Array.from(els).map(e => ({
-          testid: e.getAttribute("data-testid"),
-          icon: e.getAttribute("data-icon"),
-          tag: e.tagName,
-          visible: (e as HTMLElement).offsetHeight > 0,
-        })).filter(e => e.visible);
-      });
-      log(`   🔍 Visible data-testid/icon elements: ${JSON.stringify(testIds.slice(-20))}`);
-
-      // Last resort: press Enter to send
-      await page.keyboard.press("Enter");
-      log(`   🔘 Pressed Enter to send`);
-    }
-
-    // Wait for message to be sent (check mark appears)
-    await page.waitForTimeout(2000 + Math.random() * 1000);
-
-    log(`   ✅ Message sent to ${cleanPhone}`);
+    log(`   ✅ Message sent to +${cleanPhone}`);
     return true;
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error";
     log(`   ❌ Failed to send to ${phone}: ${msg}`);
+    if (/session lost/i.test(msg)) throw error;
     return false;
   }
 }
@@ -312,8 +372,11 @@ async function processQueue(args: { limit?: number }) {
     take: maxMessages * 2, // Get more to filter
   });
 
-  // Filter to likely mobile numbers only
+  // Filter to likely mobile numbers only + skip mojibake-corrupted business names
   const mobileLeads = leads.filter((lead) => {
+    // Skip leads whose business name contains the U+FFFD replacement char
+    // (corrupted at import) — sending "...dass 360� Cafe in..." looks like spam
+    if (lead.business && lead.business.includes("\uFFFD")) return false;
     const phone = lead.phone || "";
     // Kosovo mobile: +383 4x
     if (phone.startsWith("+383") && phone.charAt(4) === "4") return true;
@@ -379,9 +442,8 @@ async function processQueue(args: { limit?: number }) {
       name: lead.name || "",
     };
 
-    // Detect language from lead notes (Lang: xx) or default to "de"
-    const langMatch = lead.notes?.match(/Lang:\s*(\w+)/);
-    const leadLang = langMatch ? langMatch[1] : "de";
+    // Detect language from notes (Lang: xx), country, or phone prefix
+    const leadLang = inferLang(lead);
 
     // Pick template: DB first, then fallback
     const dbTemplate = dbTemplates.find((t) => t.language === leadLang);
@@ -390,9 +452,16 @@ async function processQueue(args: { limit?: number }) {
     let message = fillTemplate(templateBody, vars);
     message = randomizeMessage(message);
 
-    log(`📤 Sending to: ${lead.business} (${lead.phone})`);
+    log(`📤 Sending to: ${lead.business} (${lead.phone}) [${leadLang}]`);
 
-    const success = await sendWhatsAppMessage(page, lead.phone!, message);
+    let success = false;
+    try {
+      success = await sendWhatsAppMessage(page, lead.phone!, message);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "unknown";
+      log(`🛑 Aborting session: ${msg}`);
+      break;
+    }
 
     if (success) {
       sent++;

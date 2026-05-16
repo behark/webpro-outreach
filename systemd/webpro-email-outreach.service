@@ -1,0 +1,20 @@
+[Unit]
+Description=WebPro email outreach batch (Hostinger SMTP)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/bb/CascadeProjects/webpro-outreach
+EnvironmentFile=/home/bb/CascadeProjects/webpro-outreach/.env
+# Sends up to 80 emails, 25s apart -> ~33 min/run, well below Hostinger limits
+Environment=EMAIL_DELAY_MS=25000
+Environment=MAX_PER_RUN=80
+ExecStart=/usr/bin/env npx tsx scripts/email-outreach.ts --send --limit=80
+StandardOutput=append:/home/bb/CascadeProjects/webpro-outreach/logs/email-outreach.systemd.log
+StandardError=append:/home/bb/CascadeProjects/webpro-outreach/logs/email-outreach.systemd.log
+Nice=10
+TimeoutStartSec=2700
+
+[Install]
+WantedBy=default.target

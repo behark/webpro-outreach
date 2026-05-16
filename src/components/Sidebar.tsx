@@ -64,10 +64,10 @@ export default function Sidebar() {
       <div className="p-4 border-t border-slate-800">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-            ES
+            BK
           </div>
           <div>
-            <p className="text-sm font-medium text-white">Enisi</p>
+            <p className="text-sm font-medium text-white">Behar</p>
             <p className="text-xs text-slate-500">WebPro Austria</p>
           </div>
         </div>

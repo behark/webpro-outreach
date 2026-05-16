@@ -34,7 +34,7 @@ function getTransporter() {
 export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
   try {
     const transporter = getTransporter();
-    const fromName = process.env.SENDER_NAME || "Enisi Skovercani";
+    const fromName = process.env.SENDER_NAME || "Behar Kabashi";
     const fromEmail = process.env.SMTP_USER || "";
 
     const info = await transporter.sendMail({

@@ -1,0 +1,12 @@
+[Unit]
+Description=Run WebPro email outreach every weekday at 09:30 and 14:30 (business hours)
+
+[Timer]
+# Two batches per business day: morning + early afternoon, weekdays only
+OnCalendar=Mon..Fri 09:30:00
+OnCalendar=Mon..Fri 14:30:00
+Persistent=false
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Run WebPro email finder nightly at 02:30 (off-hours)
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+RandomizedDelaySec=1800
+
+[Install]
+WantedBy=timers.target
