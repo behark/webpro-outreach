@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { fillTemplate } from "@/lib/templates";
+import { sendEmail } from "@/lib/email";
+import { sendWhatsApp } from "@/lib/whatsapp";
 
 export async function POST(req: NextRequest) {
   const { leadId, templateId, channel, customSubject, customBody } = await req.json();
@@ -35,8 +37,50 @@ export async function POST(req: NextRequest) {
   }
 
   const messageChannel = channel || "email";
+  let sendStatus = "sent";
+  let sendResult: Record<string, unknown> = {};
 
-  // Record the message
+  // ===== ACTUALLY SEND THE MESSAGE =====
+  if (messageChannel === "email") {
+    if (!lead.email) {
+      return NextResponse.json({ error: "Lead has no email address" }, { status: 400 });
+    }
+    const result = await sendEmail({ to: lead.email, subject, body });
+    sendStatus = result.success ? "delivered" : "failed";
+    sendResult = {
+      type: "email",
+      success: result.success,
+      messageId: result.messageId,
+      error: result.error,
+      sentTo: lead.email,
+    };
+  } else if (messageChannel === "whatsapp") {
+    if (!lead.phone) {
+      return NextResponse.json({ error: "Lead has no phone number" }, { status: 400 });
+    }
+    const result = await sendWhatsApp({ to: lead.phone, body });
+    sendStatus = result.success ? "delivered" : "sent";
+    sendResult = {
+      type: "whatsapp",
+      success: result.success,
+      messageId: result.messageId,
+      error: result.error,
+      fallbackUrl: result.fallbackUrl,
+    };
+  } else if (messageChannel === "instagram") {
+    // Instagram DMs can't be automated without official API approval
+    // Return copy-ready message + profile link
+    sendStatus = "sent";
+    sendResult = {
+      type: "instagram",
+      success: false,
+      instruction: `Open Instagram and send DM to ${lead.business}`,
+      profileUrl: lead.instagram || "",
+      copyText: body,
+    };
+  }
+
+  // Record the message in database
   const message = await prisma.message.create({
     data: {
       leadId: lead.id,
@@ -44,7 +88,7 @@ export async function POST(req: NextRequest) {
       direction: "outbound",
       subject,
       body,
-      status: "sent",
+      status: sendStatus,
     },
   });
 
@@ -56,37 +100,9 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Generate the outreach action based on channel
-  let action: Record<string, string> = {};
-
-  if (messageChannel === "email" && lead.email) {
-    const mailtoSubject = encodeURIComponent(subject);
-    const mailtoBody = encodeURIComponent(body);
-    action = {
-      type: "email",
-      url: `mailto:${lead.email}?subject=${mailtoSubject}&body=${mailtoBody}`,
-      instruction: `Open your email client to send to ${lead.email}`,
-    };
-  } else if (messageChannel === "whatsapp" && lead.phone) {
-    const waText = encodeURIComponent(body);
-    const phone = lead.phone.replace(/[^0-9]/g, "");
-    action = {
-      type: "whatsapp",
-      url: `https://wa.me/${phone}?text=${waText}`,
-      instruction: `Open WhatsApp to send message to ${lead.phone}`,
-    };
-  } else if (messageChannel === "instagram") {
-    action = {
-      type: "instagram",
-      url: lead.instagram || "",
-      instruction: `Open Instagram and send DM to ${lead.business}. Copy the message below.`,
-      copyText: body,
-    };
-  }
-
   return NextResponse.json({
     message,
-    action,
+    sendResult,
     body,
     subject,
   });
