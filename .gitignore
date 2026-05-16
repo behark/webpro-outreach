@@ -46,3 +46,13 @@ prisma/dev.db
 # WhatsApp session
 .whatsapp-session/
 logs/
+
+# Scraper sessions
+.google-session/
+.search-session/
+.scraper-session/
+.debug-session/
+
+# Database
+dev.db
+*.db-journal
