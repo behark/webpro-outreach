@@ -92,6 +92,38 @@ Darf ich euch eine kostenlose Demo zeigen? 🚀
 LG Enisi von WebPro Austria`,
     variables: ["businessName", "city", "category"],
   },
+  whatsapp_sq_initial: {
+    name: "WhatsApp Erstansprache (Shqip)",
+    channel: "whatsapp",
+    language: "sq",
+    subject: null,
+    body: `Përshëndetje! 👋
+
+Unë jam Enisi nga WebPro. Pashë që {{businessName}} në {{city}} nuk ka ende një faqe interneti profesionale.
+
+Ne ndërtojmë faqe interneti moderne për {{category}} — duke filluar nga €249, gati brenda 7-10 ditëve.
+
+A dëshironi t'ju tregoj një demo falas? 🖥️
+
+Përshëndetje,
+Enisi | WebPro`,
+    variables: ["businessName", "city", "category"],
+  },
+  whatsapp_sq_followup: {
+    name: "WhatsApp Follow-up (Shqip)",
+    channel: "whatsapp",
+    language: "sq",
+    subject: null,
+    body: `Përshëndetje përsëri! 😊
+
+Doja të pyes nëse e keni parë mesazhin tim. Kam përgatitur tashmë një demo për {{businessName}}.
+
+A doni t'ju dërgoj linkun? Zgjat vetëm 2 minuta.
+
+Faleminderit,
+Enisi | WebPro`,
+    variables: ["businessName"],
+  },
 };
 
 export function fillTemplate(template: string, variables: Record<string, string>): string {
