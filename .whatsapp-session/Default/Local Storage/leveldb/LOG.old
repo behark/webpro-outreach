@@ -1,6 +1,0 @@
-2026/05/16-09:40:01.639 3f828 Reusing MANIFEST /home/bb/CascadeProjects/webpro-outreach/.whatsapp-session/Default/Local Storage/leveldb/MANIFEST-000001
-2026/05/16-09:40:01.645 3f828 Recovering log #4
-2026/05/16-09:40:01.646 3f828 Reusing old log /home/bb/CascadeProjects/webpro-outreach/.whatsapp-session/Default/Local Storage/leveldb/000004.log 
-2026/05/16-09:40:36.192 3f82a Level-0 table #8: started
-2026/05/16-09:40:36.200 3f82a Level-0 table #8: 14743 bytes OK
-2026/05/16-09:40:36.208 3f82a Delete type=0 #4
