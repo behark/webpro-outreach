@@ -6,7 +6,7 @@ export const DEFAULT_TEMPLATES = {
     subject: "Professionelle Website für {{businessName}} — kostenlose Demo",
     body: `Sehr geehrte Damen und Herren von {{businessName}},
 
-mein Name ist Enisi von WebPro Austria. Wir erstellen schnelle, mobile-freundliche Websites speziell für {{category}} in {{city}}.
+mein Name ist Behar von WebPro Austria. Wir erstellen schnelle, mobile-freundliche Websites speziell für {{category}} in {{city}}.
 
 Was wir für Sie tun können:
 • Professionelle Website (5–10 Seiten) in 7–10 Tagen
@@ -21,10 +21,10 @@ Ich würde Ihnen gerne eine kostenlose, unverbindliche Demo zeigen, wie Ihre neu
 Darf ich Ihnen einen Vorschlag per WhatsApp oder E-Mail schicken?
 
 Mit freundlichen Grüßen,
-Enisi Skovercani
+Behar Kabashi
 WebPro Austria
 +43 660 589 50 43
-enisskovercani@outlook.com
+info@beharkabashi.com
 https://webpro-austria.vercel.app`,
     variables: ["businessName", "category", "city"],
   },
@@ -42,7 +42,7 @@ Ich habe bereits eine Demo-Website für {{businessName}} vorbereitet. Sie könne
 Falls Sie Interesse haben, antworte ich innerhalb von 24 Stunden.
 
 Freundliche Grüße,
-Enisi Skovercani
+Behar Kabashi
 WebPro Austria
 +43 660 589 50 43`,
     variables: ["businessName"],
@@ -54,14 +54,14 @@ WebPro Austria
     subject: null,
     body: `Guten Tag! 👋
 
-Mein Name ist Enisi von WebPro Austria. Ich habe gesehen, dass {{businessName}} in {{city}} noch keine professionelle Website hat.
+Mein Name ist Behar von WebPro Austria. Ich habe gesehen, dass {{businessName}} in {{city}} noch keine professionelle Website hat.
 
 Wir bauen mobile-freundliche Websites speziell für {{category}} — ab €349, fertig in 7–10 Tagen.
 
 Darf ich Ihnen eine kostenlose Demo zeigen, wie Ihre Website aussehen könnte? 🖥️
 
 Beste Grüße,
-Enisi | WebPro Austria`,
+Behar | WebPro Austria`,
     variables: ["businessName", "city", "category"],
   },
   whatsapp_de_followup: {
@@ -75,7 +75,7 @@ Ich wollte kurz nachfragen, ob Sie meine Nachricht gesehen haben. Ich habe berei
 
 Soll ich Ihnen einen Link schicken? Dauert nur 2 Minuten zum Anschauen.
 
-LG Enisi, WebPro Austria`,
+LG Behar, WebPro Austria`,
     variables: ["businessName"],
   },
   instagram_de_initial: {
@@ -89,7 +89,7 @@ Euer Profil sieht super aus! Habt ihr schon eine eigene Website? Wir bauen profe
 
 Darf ich euch eine kostenlose Demo zeigen? 🚀
 
-LG Enisi von WebPro Austria`,
+LG Behar von WebPro Austria`,
     variables: ["businessName", "city", "category"],
   },
   whatsapp_sq_initial: {
@@ -99,14 +99,14 @@ LG Enisi von WebPro Austria`,
     subject: null,
     body: `Përshëndetje! 👋
 
-Unë jam Enisi nga WebPro. Pashë që {{businessName}} në {{city}} nuk ka ende një faqe interneti profesionale.
+Unë jam Behar nga WebPro. Pashë që {{businessName}} në {{city}} nuk ka ende një faqe interneti profesionale.
 
 Ne ndërtojmë faqe interneti moderne për {{category}} — duke filluar nga €249, gati brenda 7-10 ditëve.
 
 A dëshironi t'ju tregoj një demo falas? 🖥️
 
 Përshëndetje,
-Enisi | WebPro`,
+Behar | WebPro`,
     variables: ["businessName", "city", "category"],
   },
   whatsapp_sq_followup: {
@@ -121,7 +121,7 @@ Doja të pyes nëse e keni parë mesazhin tim. Kam përgatitur tashmë një demo
 A doni t'ju dërgoj linkun? Zgjat vetëm 2 minuta.
 
 Faleminderit,
-Enisi | WebPro`,
+Behar | WebPro`,
     variables: ["businessName"],
   },
 };

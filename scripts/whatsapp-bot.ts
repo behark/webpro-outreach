@@ -152,41 +152,127 @@ async function waitForLogin(page: Page): Promise<boolean> {
 
 async function sendWhatsAppMessage(page: Page, phone: string, message: string): Promise<boolean> {
   try {
-    // Clean phone number
-    const cleanPhone = phone.replace(/[^0-9+]/g, "").replace(/^\+/, "");
+    // Clean phone number — ensure it has country code with +
+    let cleanPhone = phone.replace(/[^0-9+]/g, "");
+    if (!cleanPhone.startsWith("+")) {
+      cleanPhone = "+" + cleanPhone;
+    }
 
     // Navigate to chat via wa.me URL (most reliable method)
     const encodedMsg = encodeURIComponent(message);
     await page.goto(`https://web.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`, {
-      waitUntil: "domcontentloaded",
+      waitUntil: "load",
+      timeout: 30000,
     });
 
-    // Wait for chat to load
-    await page.waitForTimeout(3000 + Math.random() * 2000);
-
-    // Check for "Phone number shared via url is invalid" popup
-    const invalidNumber = await page.locator('text="Phone number shared via url is invalid"').isVisible().catch(() => false);
-    if (invalidNumber) {
-      log(`   ⚠️  Invalid phone number: ${cleanPhone}`);
-      return false;
+    // Wait for WhatsApp Web to fully initialize (splash screen takes time)
+    // Look for either a chat element, an error popup, or the side panel
+    try {
+      await page.waitForFunction(() => {
+        return (
+          document.querySelector('[data-testid="send"]') ||
+          document.querySelector('[data-testid="popup-controls-ok"]') ||
+          document.querySelector('[data-testid="conversation-compose-box-input"]') ||
+          document.querySelector('[data-testid="compose-box"]') ||
+          document.body.innerText.includes('Phone number shared via url is invalid') ||
+          document.body.innerText.includes("isn't") ||
+          document.body.innerText.includes('Try again')
+        );
+      }, { timeout: 25000 });
+    } catch {
+      log(`   ⏳ WhatsApp Web took too long to load, retrying wait...`);
+      await page.waitForTimeout(5000);
     }
 
-    // Check for "OK" button (number not on WhatsApp)
-    const okButton = await page.locator('[data-testid="popup-controls-ok"]').isVisible().catch(() => false);
-    if (okButton) {
-      await page.locator('[data-testid="popup-controls-ok"]').click();
+    // Extra small wait for UI to settle
+    await page.waitForTimeout(1500 + Math.random() * 1500);
+
+    // Debug: always save screenshot
+    const ssPath = path.resolve(__dirname, "../logs/wa-debug.png");
+    await page.screenshot({ path: ssPath }).catch(() => {});
+
+    // Check for various error states
+    const pageContent = await page.content();
+    if (
+      pageContent.includes("Phone number shared via url is invalid") ||
+      pageContent.includes("phone number is not") ||
+      pageContent.includes("couldn't find")
+    ) {
+      // Try to close popup
+      const okBtn = page.locator('[data-testid="popup-controls-ok"]');
+      if (await okBtn.isVisible().catch(() => false)) {
+        await okBtn.click();
+      }
       log(`   ⚠️  Number not on WhatsApp: ${cleanPhone}`);
       return false;
     }
 
-    // Wait for send button to appear
-    await page.waitForSelector('[data-testid="send"]', { timeout: 15000 });
+    // Check for "OK" button (popup indicating number isn't valid)
+    const okButton = page.locator('[data-testid="popup-controls-ok"]');
+    if (await okButton.isVisible().catch(() => false)) {
+      await okButton.click();
+      log(`   ⚠️  Number not on WhatsApp: ${cleanPhone}`);
+      return false;
+    }
+
+    // Check if chat loaded at all — look for compose area or conversation panel
+    const chatLoaded = await page.evaluate(() => {
+      return !!(
+        document.querySelector('[data-testid="conversation-compose-box-input"]') ||
+        document.querySelector('[data-testid="compose-box"]') ||
+        document.querySelector('[contenteditable="true"]') ||
+        document.querySelector('[data-testid="msg-input"]')
+      );
+    });
+
+    if (!chatLoaded) {
+      log(`   ⚠️  Chat didn't load for: ${cleanPhone}`);
+      return false;
+    }
 
     // Small human-like pause before clicking send
     await page.waitForTimeout(1000 + Math.random() * 2000);
 
-    // Click send
-    await page.locator('[data-testid="send"]').click();
+    // Try multiple send button selectors (WhatsApp Web updates often)
+    const sendSelectors = [
+      '[data-testid="send"]',
+      '[data-testid="compose-btn-send"]',
+      'span[data-icon="send"]',
+      'span[data-icon="compose-btn-send"]',
+      '[aria-label="Send"]',
+      'button[aria-label="Send"]',
+      // The green circular send button
+      'div[role="button"] span[data-icon]',
+    ];
+
+    let clicked = false;
+    for (const sel of sendSelectors) {
+      const btn = page.locator(sel).first();
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.click();
+        clicked = true;
+        log(`   🔘 Clicked send via: ${sel}`);
+        break;
+      }
+    }
+
+    if (!clicked) {
+      // Dump all data-testid and data-icon attrs for debugging
+      const testIds = await page.evaluate(() => {
+        const els = document.querySelectorAll("[data-testid], [data-icon]");
+        return Array.from(els).map(e => ({
+          testid: e.getAttribute("data-testid"),
+          icon: e.getAttribute("data-icon"),
+          tag: e.tagName,
+          visible: (e as HTMLElement).offsetHeight > 0,
+        })).filter(e => e.visible);
+      });
+      log(`   🔍 Visible data-testid/icon elements: ${JSON.stringify(testIds.slice(-20))}`);
+
+      // Last resort: press Enter to send
+      await page.keyboard.press("Enter");
+      log(`   🔘 Pressed Enter to send`);
+    }
 
     // Wait for message to be sent (check mark appears)
     await page.waitForTimeout(2000 + Math.random() * 1000);
@@ -208,28 +294,59 @@ async function processQueue(args: { limit?: number }) {
 
   const maxMessages = args.limit || MAX_PER_SESSION;
 
-  // Get leads to contact (new leads with phone numbers, not yet contacted)
+  // Get leads to contact (new leads with mobile phone numbers, not yet contacted)
+  // Prioritize: Kosovo/Albania first (mobile numbers), then others
+  // Skip likely landlines (Swiss/German numbers without mobile prefix)
   const leads = await prisma.lead.findMany({
     where: {
       status: "new",
       phone: { not: null },
+      // Prioritize countries with mobile numbers
+      country: { in: ["Kosovo", "Albania", "Serbia", "Austria", "Germany", "Switzerland"] },
     },
-    orderBy: { createdAt: "asc" },
-    take: maxMessages,
+    orderBy: [
+      // Kosovo/Albania first (highest WhatsApp adoption with mobile numbers)
+      { country: "asc" },
+      { createdAt: "asc" },
+    ],
+    take: maxMessages * 2, // Get more to filter
   });
 
-  if (leads.length === 0) {
-    log("📭 No leads in queue to contact.");
+  // Filter to likely mobile numbers only
+  const mobileLeads = leads.filter((lead) => {
+    const phone = lead.phone || "";
+    // Kosovo mobile: +383 4x
+    if (phone.startsWith("+383") && phone.charAt(4) === "4") return true;
+    // Albania mobile: +355 6x
+    if (phone.startsWith("+355") && phone.charAt(4) === "6") return true;
+    // Austria mobile: +43 6xx
+    if (phone.startsWith("+43") && phone.charAt(3) === "6") return true;
+    if (phone.startsWith("43") && phone.charAt(2) === "6") return true;
+    // Germany mobile: +49 1xx
+    if (phone.startsWith("+49") && phone.charAt(3) === "1") return true;
+    if (phone.startsWith("49") && phone.charAt(2) === "1") return true;
+    // Switzerland mobile: +41 7x
+    if (phone.startsWith("+41") && phone.charAt(3) === "7") return true;
+    if (phone.startsWith("41") && phone.charAt(2) === "7") return true;
+    // Serbia mobile: +381 6x
+    if (phone.startsWith("+381") && phone.charAt(4) === "6") return true;
+    // Any number starting with +383 (Kosovo) is likely mobile
+    if (phone.includes("+383")) return true;
+    return false;
+  }).slice(0, maxMessages);
+
+  if (mobileLeads.length === 0) {
+    log("📭 No mobile leads in queue. Remaining leads may have landline numbers.");
     return;
   }
 
-  log(`📋 ${leads.length} leads to contact (max ${maxMessages} this session)`);
+  log(`📋 ${mobileLeads.length} mobile leads to contact (filtered from ${leads.length} total, max ${maxMessages} this session)`);
 
   // Fallback templates by language (used if none in DB)
   const fallbackTemplates: Record<string, string> = {
-    de: `Guten Tag! 👋\n\nMein Name ist Enisi von WebPro Austria. Ich habe gesehen, dass {{businessName}} in {{city}} noch keine professionelle Website hat.\n\nWir bauen mobile-freundliche Websites speziell für {{category}} — ab €349, fertig in 7–10 Tagen.\n\nDarf ich Ihnen eine kostenlose Demo zeigen? 🖥️\n\nBeste Grüße,\nEnisi | WebPro Austria`,
-    sq: `Përshëndetje! 👋\n\nUnë jam Enisi nga WebPro. Pashë që {{businessName}} në {{city}} nuk ka ende një faqe interneti profesionale.\n\nNe ndërtojmë faqe interneti moderne për {{category}} — duke filluar nga €249, gati brenda 7-10 ditëve.\n\nA dëshironi t'ju tregoj një demo falas? 🖥️\n\nPërshëndetje,\nEnisi | WebPro`,
-    en: `Hi there! 👋\n\nI'm Enisi from WebPro. I noticed that {{businessName}} in {{city}} doesn't have a professional website yet.\n\nWe build modern, mobile-friendly websites for {{category}} — starting at €249, ready in 7-10 days.\n\nWould you like me to show you a free demo? 🖥️\n\nBest regards,\nEnisi | WebPro`,
+    de: `Guten Tag! 👋\n\nMein Name ist Behar von WebPro Austria. Ich habe gesehen, dass {{businessName}} in {{city}} noch keine professionelle Website hat.\n\nWir bauen mobile-freundliche Websites speziell für {{category}} — ab €349, fertig in 7–10 Tagen.\n\nDarf ich Ihnen eine kostenlose Demo zeigen? 🖥️\n\nBeste Grüße,\nBehar | WebPro Austria`,
+    sq: `Përshëndetje! 👋\n\nUnë jam Behar nga WebPro. Pashë që {{businessName}} në {{city}} nuk ka ende një faqe interneti profesionale.\n\nNe ndërtojmë faqe interneti moderne për {{category}} — duke filluar nga €249, gati brenda 7-10 ditëve.\n\nA dëshironi t'ju tregoj një demo falas? 🖥️\n\nPërshëndetje,\nBehar | WebPro`,
+    en: `Hi there! 👋\n\nI'm Behar from WebPro. I noticed that {{businessName}} in {{city}} doesn't have a professional website yet.\n\nWe build modern, mobile-friendly websites for {{category}} — starting at €249, ready in 7-10 days.\n\nWould you like me to show you a free demo? 🖥️\n\nBest regards,\nBehar | WebPro`,
   };
 
   // Try to get templates from DB
@@ -249,7 +366,7 @@ async function processQueue(args: { limit?: number }) {
   let sent = 0;
   let failed = 0;
 
-  for (const lead of leads) {
+  for (const lead of mobileLeads) {
     if (!isBusinessHours()) {
       log("⏰ Business hours ended. Stopping.");
       break;
@@ -309,7 +426,7 @@ async function processQueue(args: { limit?: number }) {
     }
 
     // Random delay between messages (critical for anti-ban)
-    if (sent + failed < leads.length) {
+    if (sent + failed < mobileLeads.length) {
       const delay = randomDelay(MIN_DELAY_SEC, MAX_DELAY_SEC);
       log(`   ⏳ Waiting ${Math.round(delay / 1000)}s before next message...`);
       await page.waitForTimeout(delay);
@@ -317,7 +434,7 @@ async function processQueue(args: { limit?: number }) {
   }
 
   log(`\n🏁 Session complete: ${sent} sent, ${failed} failed`);
-  log(`📊 Remaining in queue: ${leads.length - sent - failed}`);
+  log(`📊 Remaining in queue: ${mobileLeads.length - sent - failed}`);
 
   // Close browser
   await context.close();

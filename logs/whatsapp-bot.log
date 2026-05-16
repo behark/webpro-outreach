@@ -4,3 +4,151 @@
 [2026-05-16T06:35:44.944Z]    Contacted: 0
 [2026-05-16T06:35:44.944Z]    WhatsApp messages sent: 0
 [2026-05-16T06:35:44.944Z]    Session dir exists: false
+[2026-05-16T06:44:34.229Z] 🚀 WhatsApp Bot — Login Mode
+[2026-05-16T06:44:34.230Z]    Scan the QR code, then restart with --send flag
+[2026-05-16T06:44:36.410Z] 🌐 Opening WhatsApp Web...
+[2026-05-16T06:44:57.396Z] 📱 Please scan the QR code with your phone...
+[2026-05-16T06:44:57.396Z]    Open WhatsApp → Settings → Linked Devices → Link a Device
+[2026-05-16T06:45:07.148Z] ✅ Login successful!
+[2026-05-16T06:45:07.148Z] ✅ Session saved. You can now run with --send flag.
+[2026-05-16T06:45:07.148Z]    Command: npx tsx scripts/whatsapp-bot.ts --send
+[2026-05-16T06:45:07.148Z]    Press Ctrl+C to close.
+[2026-05-16T06:45:42.985Z] 📋 5 leads to contact (max 5 this session)
+[2026-05-16T06:45:43.093Z] ❌ Fatal error: browserType.launchPersistentContext: Opening in existing browser session. This usually means that the profile is already in use by another instance of Chromium.
+Call log:
+[2m  - <launching> /home/bb/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --no-sandbox --no-sandbox --disable-blink-features=AutomationControlled --disable-features=site-per-process --user-data-dir=/home/bb/CascadeProjects/webpro-outreach/.whatsapp-session --remote-debugging-pipe about:blank[22m
+[2m  - <launched> pid=218326[22m
+[2m  - [pid=218326][out] Opening in existing browser session.[22m
+[2m  - [pid=218326] <gracefully close start>[22m
+[2m  - [pid=218326] <kill>[22m
+[2m  - [pid=218326] <will force kill>[22m
+[2m  - [pid=218326] <process did exit: exitCode=0, signal=null>[22m
+[2m  - [pid=218326] starting temporary directories cleanup[22m
+[2m  - [pid=218326] finished temporary directories cleanup[22m
+[2m  - [pid=218326] <gracefully close end>[22m
+
+[2026-05-16T06:45:57.916Z] 📋 5 leads to contact (max 5 this session)
+[2026-05-16T06:45:58.607Z] 🌐 Opening WhatsApp Web...
+[2026-05-16T06:46:05.875Z] ✅ Already logged in!
+[2026-05-16T06:46:05.875Z] 📤 Sending to: Coiffeur Yanu Central (41442439494)
+[2026-05-16T06:46:25.748Z]    ❌ Failed to send to 41442439494: page.waitForSelector: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="send"]') to be visible[22m
+
+[2026-05-16T06:46:25.776Z]    ⏳ Waiting 128s before next message...
+[2026-05-16T06:48:34.015Z] 📤 Sending to: Anas Coiffeur (41313714800)
+[2026-05-16T06:48:52.794Z]    ❌ Failed to send to 41313714800: page.waitForSelector: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="send"]') to be visible[22m
+
+[2026-05-16T06:48:52.813Z]    ⏳ Waiting 75s before next message...
+[2026-05-16T06:49:42.248Z] ❌ Fatal error: page.waitForTimeout: Target page, context or browser has been closed
+[2026-05-16T06:49:58.766Z] 📋 5 leads to contact (max 5 this session)
+[2026-05-16T06:49:59.464Z] 🌐 Opening WhatsApp Web...
+[2026-05-16T06:50:05.670Z] ✅ Already logged in!
+[2026-05-16T06:50:05.671Z] 📤 Sending to: Coiffeur Yanu Central (41442439494)
+[2026-05-16T06:50:33.125Z]    ⚠️  Chat didn't load for: +41442439494
+[2026-05-16T06:50:33.144Z]    ⏳ Waiting 161s before next message...
+[2026-05-16T06:53:14.638Z] 📤 Sending to: Anas Coiffeur (41313714800)
+[2026-05-16T06:53:41.956Z]    ⚠️  Chat didn't load for: +41313714800
+[2026-05-16T06:53:41.975Z]    ⏳ Waiting 140s before next message...
+[2026-05-16T06:54:14.534Z] ❌ Fatal error: page.waitForTimeout: Target page, context or browser has been closed
+[2026-05-16T06:54:56.766Z] 📋 5 mobile leads to contact (filtered from 10 total, max 5 this session)
+[2026-05-16T06:54:57.418Z] 🌐 Opening WhatsApp Web...
+[2026-05-16T06:55:03.347Z] ✅ Already logged in!
+[2026-05-16T06:55:03.348Z] 📤 Sending to: 360� Cafe (+436648406570)
+[2026-05-16T06:55:29.887Z]    ⚠️  Chat didn't load for: +436648406570
+[2026-05-16T06:55:29.919Z]    ⏳ Waiting 97s before next message...
+[2026-05-16T06:57:07.340Z] 📤 Sending to: A&A Barbershop (+436644124986)
+[2026-05-16T06:57:35.947Z]    ⚠️  Chat loaded but send button not found for: +436644124986
+[2026-05-16T06:57:35.965Z]    ⏳ Waiting 114s before next message...
+[2026-05-16T06:58:07.036Z] ❌ Fatal error: page.waitForTimeout: Target page, context or browser has been closed
+[2026-05-16T06:58:20.446Z] 📋 3 mobile leads to contact (filtered from 6 total, max 3 this session)
+[2026-05-16T06:58:21.161Z] 🌐 Opening WhatsApp Web...
+[2026-05-16T06:58:27.520Z] ✅ Already logged in!
+[2026-05-16T06:58:27.521Z] 📤 Sending to: 360� Cafe (+436648406570)
+[2026-05-16T06:58:54.399Z]    ⚠️  Chat didn't load for: +436648406570
+[2026-05-16T06:58:54.435Z]    ⏳ Waiting 25s before next message...
+[2026-05-16T06:59:19.758Z] 📤 Sending to: A&A Barbershop (+436644124986)
+[2026-05-16T06:59:48.235Z]    ⚠️  Chat loaded but send button not found for: +436644124986
+[2026-05-16T06:59:48.262Z]    ⏳ Waiting 29s before next message...
+[2026-05-16T07:00:17.713Z] 📤 Sending to: A.Jakschitz Andrea Interio (+436645304229)
+[2026-05-16T07:00:46.344Z]    ⚠️  Chat loaded but send button not found for: +436645304229
+[2026-05-16T07:00:46.370Z] 
+🏁 Session complete: 0 sent, 3 failed
+[2026-05-16T07:00:46.370Z] 📊 Remaining in queue: 0
+[2026-05-16T07:01:26.235Z] 📋 1 mobile leads to contact (filtered from 2 total, max 1 this session)
+[2026-05-16T07:01:26.853Z] 🌐 Opening WhatsApp Web...
+[2026-05-16T07:01:41.358Z] ✅ Already logged in!
+[2026-05-16T07:01:41.359Z] 📤 Sending to: 360� Cafe (+436648406570)
+[2026-05-16T07:02:18.374Z]    ⚠️  Chat didn't load for: +436648406570
+[2026-05-16T07:02:18.412Z] 
+🏁 Session complete: 0 sent, 1 failed
+[2026-05-16T07:02:18.412Z] 📊 Remaining in queue: 0
+[2026-05-16T07:37:46.303Z] 📋 2 mobile leads to contact (filtered from 4 total, max 2 this session)
+[2026-05-16T07:37:47.013Z] 🌐 Opening WhatsApp Web...
+[2026-05-16T07:37:53.854Z] ✅ Already logged in!
+[2026-05-16T07:37:53.855Z] 📤 Sending to: 360� Cafe (+436648406570)
+[2026-05-16T07:38:22.631Z]    ⚠️  Chat didn't load for: +436648406570
+[2026-05-16T07:38:22.660Z]    ⏳ Waiting 14s before next message...
+[2026-05-16T07:38:37.052Z] 📤 Sending to: A&A Barbershop (+436644124986)
+[2026-05-16T07:39:08.013Z]    ⚠️  Chat loaded but send button not found for: +436644124986
+[2026-05-16T07:39:08.031Z] 
+🏁 Session complete: 0 sent, 2 failed
+[2026-05-16T07:39:08.032Z] 📊 Remaining in queue: 0
+[2026-05-16T07:40:01.281Z] 📋 2 mobile leads to contact (filtered from 4 total, max 2 this session)
+[2026-05-16T07:40:01.955Z] 🌐 Opening WhatsApp Web...
+[2026-05-16T07:40:08.135Z] ✅ Already logged in!
+[2026-05-16T07:40:08.136Z] 📤 Sending to: 360� Cafe (+436648406570)
+[2026-05-16T07:40:17.458Z]    ⚠️  Chat didn't load for: +436648406570
+[2026-05-16T07:40:17.486Z]    ⏳ Waiting 14s before next message...
+[2026-05-16T07:40:31.454Z] 📤 Sending to: A&A Barbershop (+436644124986)
+[2026-05-16T07:40:41.890Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T07:40:44.554Z]    ✅ Message sent to +436644124986
+[2026-05-16T07:40:44.606Z] 
+🏁 Session complete: 1 sent, 1 failed
+[2026-05-16T07:40:44.606Z] 📊 Remaining in queue: 0
+[2026-05-16T08:01:56.805Z] 📋 10 mobile leads to contact (filtered from 20 total, max 10 this session)
+[2026-05-16T08:01:57.757Z] 🌐 Opening WhatsApp Web...
+[2026-05-16T08:02:06.092Z] ✅ Already logged in!
+[2026-05-16T08:02:06.092Z] 📤 Sending to: 360� Cafe (+436648406570)
+[2026-05-16T08:02:17.033Z]    ⚠️  Chat didn't load for: +436648406570
+[2026-05-16T08:02:17.062Z]    ⏳ Waiting 96s before next message...
+[2026-05-16T08:03:52.866Z] 📤 Sending to: A.Jakschitz Andrea Interio (+436645304229)
+[2026-05-16T08:04:06.939Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T08:04:09.027Z]    ✅ Message sent to +436645304229
+[2026-05-16T08:04:09.082Z]    ⏳ Waiting 73s before next message...
+[2026-05-16T08:05:21.822Z] 📤 Sending to: Abbruch & Ausr�umen Tirol innsbruck (+436763842480)
+[2026-05-16T08:05:35.007Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T08:05:37.971Z]    ✅ Message sent to +436763842480
+[2026-05-16T08:05:38.017Z]    ⏳ Waiting 103s before next message...
+[2026-05-16T08:07:20.558Z] 📤 Sending to: Alles Klar Autowellness (+4369919791903)
+[2026-05-16T08:07:34.955Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T08:07:37.596Z]    ✅ Message sent to +4369919791903
+[2026-05-16T08:07:37.643Z]    ⏳ Waiting 81s before next message...
+[2026-05-16T08:08:58.652Z] 📤 Sending to: Auto Motor Service (+436643201616)
+[2026-05-16T08:09:11.512Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T08:09:13.778Z]    ✅ Message sent to +436643201616
+[2026-05-16T08:09:13.818Z]    ⏳ Waiting 164s before next message...
+[2026-05-16T08:11:57.757Z] 📤 Sending to: Auto reparatur (+436765511362)
+[2026-05-16T08:12:12.345Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T08:12:14.556Z]    ✅ Message sent to +436765511362
+[2026-05-16T08:12:14.604Z]    ⏳ Waiting 165s before next message...
+[2026-05-16T08:14:59.857Z] 📤 Sending to: BAGHDAD STYLE (+436767216688)
+[2026-05-16T08:15:14.746Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T08:15:17.542Z]    ✅ Message sent to +436767216688
+[2026-05-16T08:15:18.417Z]    ⏳ Waiting 135s before next message...
+[2026-05-16T08:17:33.586Z] 📤 Sending to: BM-Textilreinigung (+436765074577)
+[2026-05-16T08:17:45.273Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T08:17:47.486Z]    ✅ Message sent to +436765074577
+[2026-05-16T08:17:48.912Z]    ⏳ Waiting 131s before next message...
+[2026-05-16T08:20:00.322Z] 📤 Sending to: Backerei INN (+436766532784)
+[2026-05-16T08:20:14.276Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T08:20:16.662Z]    ✅ Message sent to +436766532784
+[2026-05-16T08:20:16.702Z]    ⏳ Waiting 102s before next message...
+[2026-05-16T08:21:58.581Z] 📤 Sending to: Barber der Eleganz (+436769288969)
+[2026-05-16T08:22:12.236Z]    🔘 Clicked send via: [aria-label="Send"]
+[2026-05-16T08:22:15.007Z]    ✅ Message sent to +436769288969
+[2026-05-16T08:22:15.044Z] 
+🏁 Session complete: 9 sent, 1 failed
+[2026-05-16T08:22:15.044Z] 📊 Remaining in queue: 0

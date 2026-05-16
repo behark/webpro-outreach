@@ -1,0 +1,60 @@
+2026/05/16-10:01:58.481 438a1 Reusing MANIFEST /home/bb/CascadeProjects/webpro-outreach/.whatsapp-session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/05/16-10:01:58.481 438a1 Recovering log #147
+2026/05/16-10:01:58.522 438a1 Reusing old log /home/bb/CascadeProjects/webpro-outreach/.whatsapp-session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000147.log 
+2026/05/16-10:03:02.940 438a3 Level-0 table #157: started
+2026/05/16-10:03:02.981 438a3 Level-0 table #157: 1282061 bytes OK
+2026/05/16-10:03:02.989 438a3 Delete type=0 #147
+2026/05/16-10:03:11.274 438a2 Compacting 1@1 + 6@2 files
+2026/05/16-10:03:11.369 438a2 Generated table #158@1: 65184 keys, 2246225 bytes
+2026/05/16-10:03:11.408 438a2 Generated table #159@1: 3214 keys, 2152807 bytes
+2026/05/16-10:03:11.477 438a2 Generated table #160@1: 24125 keys, 2213125 bytes
+2026/05/16-10:03:11.564 438a2 Generated table #161@1: 52330 keys, 2188044 bytes
+2026/05/16-10:03:11.705 438a2 Generated table #162@1: 93948 keys, 2244266 bytes
+2026/05/16-10:03:11.748 438a2 Generated table #163@1: 16845 keys, 484486 bytes
+2026/05/16-10:03:11.749 438a2 Compacted 1@1 + 6@2 files => 11528953 bytes
+2026/05/16-10:03:11.761 438a2 compacted to: files[ 0 0 6 0 0 0 0 ]
+2026/05/16-10:03:11.762 438a2 Delete type=2 #153
+2026/05/16-10:03:11.762 438a2 Delete type=2 #150
+2026/05/16-10:03:11.762 438a2 Delete type=2 #149
+2026/05/16-10:03:11.762 438a2 Delete type=2 #151
+2026/05/16-10:03:11.762 438a2 Delete type=2 #154
+2026/05/16-10:03:11.762 438a2 Delete type=2 #152
+2026/05/16-10:03:11.762 438a2 Delete type=2 #157
+2026/05/16-10:09:03.241 438a2 Level-0 table #165: started
+2026/05/16-10:09:03.279 438a2 Level-0 table #165: 1379586 bytes OK
+2026/05/16-10:09:03.287 438a2 Delete type=0 #156
+2026/05/16-10:09:03.341 438a3 Compacting 1@1 + 6@2 files
+2026/05/16-10:09:03.474 438a3 Generated table #166@1: 68037 keys, 2252283 bytes
+2026/05/16-10:09:03.512 438a3 Generated table #167@1: 4631 keys, 2153138 bytes
+2026/05/16-10:09:03.604 438a3 Generated table #168@1: 24240 keys, 2211522 bytes
+2026/05/16-10:09:03.682 438a3 Generated table #169@1: 47622 keys, 2181276 bytes
+2026/05/16-10:09:03.808 438a3 Generated table #170@1: 93857 keys, 2244004 bytes
+2026/05/16-10:09:03.845 438a3 Generated table #171@1: 22431 keys, 620909 bytes
+2026/05/16-10:09:03.845 438a3 Compacted 1@1 + 6@2 files => 11663132 bytes
+2026/05/16-10:09:03.852 438a3 compacted to: files[ 0 0 6 0 0 0 0 ]
+2026/05/16-10:17:38.749 438a2 Level-0 table #173: started
+2026/05/16-10:17:38.793 438a2 Level-0 table #173: 1436096 bytes OK
+2026/05/16-10:17:38.801 438a2 Delete type=2 #159
+2026/05/16-10:17:38.802 438a2 Delete type=2 #161
+2026/05/16-10:17:38.802 438a2 Delete type=2 #165
+2026/05/16-10:17:38.802 438a2 Delete type=0 #164
+2026/05/16-10:17:38.802 438a2 Delete type=2 #158
+2026/05/16-10:17:38.802 438a2 Delete type=2 #160
+2026/05/16-10:17:38.802 438a2 Delete type=2 #163
+2026/05/16-10:17:38.802 438a2 Delete type=2 #162
+2026/05/16-10:17:38.870 438a2 Compacting 1@1 + 6@2 files
+2026/05/16-10:17:38.979 438a2 Generated table #174@1: 69034 keys, 2257069 bytes
+2026/05/16-10:17:39.020 438a2 Generated table #175@1: 8067 keys, 2159100 bytes
+2026/05/16-10:17:39.080 438a2 Generated table #176@1: 24305 keys, 2214790 bytes
+2026/05/16-10:17:39.150 438a2 Generated table #177@1: 41421 keys, 2174774 bytes
+2026/05/16-10:17:39.554 438a2 Generated table #178@1: 93861 keys, 2243290 bytes
+2026/05/16-10:17:39.917 438a2 Generated table #179@1: 29456 keys, 792772 bytes
+2026/05/16-10:17:39.917 438a2 Compacted 1@1 + 6@2 files => 11841795 bytes
+2026/05/16-10:17:39.925 438a2 compacted to: files[ 0 0 6 0 0 0 0 ]
+2026/05/16-10:17:39.925 438a2 Delete type=2 #166
+2026/05/16-10:17:39.925 438a2 Delete type=2 #170
+2026/05/16-10:17:39.925 438a2 Delete type=2 #168
+2026/05/16-10:17:39.925 438a2 Delete type=2 #171
+2026/05/16-10:17:39.925 438a2 Delete type=2 #173
+2026/05/16-10:17:39.925 438a2 Delete type=2 #169
+2026/05/16-10:17:39.925 438a2 Delete type=2 #167
